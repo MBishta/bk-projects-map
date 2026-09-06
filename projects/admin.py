@@ -15,3 +15,14 @@ class ProjectAdmin(admin.ModelAdmin):
     list_filter = ("work_type", "is_public")
     search_fields = ("reference", "public_name", "client_name", "area")
     readonly_fields = ("id", "created_at", "updated_at")
+
+    class Media:
+        css = {
+            "all": (
+                "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+            )
+        }
+        js = (
+            "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+            "projects/js/admin_location.js",
+        )
