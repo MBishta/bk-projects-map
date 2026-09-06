@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sign In | BK Projects Map</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            font-family: Arial, sans-serif;
+            color: #193e35;
+            background: linear-gradient(135deg, #edf4ef, #dbe8e2);
+        }
+
+        .card {
+            width: 100%;
+            max-width: 440px;
+            padding: 36px;
+            background: white;
+            border: 1px solid #e2ebe6;
+            border-radius: 24px;
+            box-shadow: 0 20px 70px #173d3514;
+        }
+
+        .brand {
+            width: 64px;
+            height: 64px;
+            display: grid;
+            place-items: center;
+            border-radius: 18px;
+            background: #174e43;
+            color: white;
+            font-size: 27px;
+            font-weight: bold;
+            margin: 0 auto 18px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 25px;
+            margin: 0 0 10px;
+        }
+
+        .intro {
+            text-align: center;
+            color: #6c7d76;
+            line-height: 1.7;
+            margin-bottom: 28px;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            min-height: 48px;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            padding: 12px;
+            font: inherit;
+        }
+
+        input:focus-visible,
+        button:focus-visible,
+        a:focus-visible {
+            outline: 2px solid #39836f;
+            outline-offset: 3px;
+        }
+
+        button {
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .password-box {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+        }
+
+        .password-box input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .show-password {
+            flex: 0 0 48px;
+            display: grid;
+            place-items: center;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            background: #f2f7f4;
+            color: #174e43;
+        }
+
+        .show-password:hover { background: #e5efe9; }
+
+        .show-password svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        [hidden] { display: none !important; }
+
+        .submit {
+            width: 100%;
+            margin-top: 24px;
+            padding: 14px;
+            border: 0;
+            border-radius: 10px;
+            background: #174e43;
+            color: white;
+            font-weight: bold;
+        }
+
+        .submit:hover { background: #103b32; }
+
+        .error {
+            padding: 12px;
+            background: #fff0ee;
+            border: 1px solid #efcac4;
+            color: #94392c;
+            border-radius: 10px;
+            line-height: 1.7;
+        }
+
+        .back {
+            display: block;
+            margin-top: 24px;
+            text-align: center;
+            color: #174e43;
+            font-size: 14px;
+        }
+
+        @media (max-width: 480px) {
+            .card { padding: 28px 22px; }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="card">
+        <div class="brand" aria-hidden="true">BK</div>
+
+        <h1>Sign In</h1>
+        <p class="intro">Welcome to BK Projects Map</p>
+
+        {% if form.errors %}
+            <p class="error" role="alert">
+                Unable to sign in. Please check your username and password.
+            </p>
+        {% endif %}
+
+        <form method="post" action="{% url 'accounts:login' %}">
+            {% csrf_token %}
+
+            <label for="username">Username</label>
+            <input
+                id="username"
+                name="username"
+                type="text"
+                autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
+                value="{{ form.username.value|default_if_none:'' }}"
+                required
+                autofocus
+            >
+
+            <label for="password">Password</label>
+
+            <div class="password-box">
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button
+                    class="show-password"
+                    type="button"
+                    id="show-password"
+                    aria-label="Show password"
+                    title="Show password"
+                    aria-controls="password"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                        <path id="eye-slash" d="M3 3 21 21" hidden/>
+                    </svg>
+                </button>
+            </div>
+
+            <input type="hidden" name="next" value="{{ next }}">
+
+            <button class="submit" type="submit">Sign In</button>
+        </form>
+        
+<a class="back" href="{% url 'accounts:password_reset' %}">
+    Forgot Password?
+</a>
+
+        <a class="back" href="{% url 'public-map' %}">
+            Back to Public Map
+        </a>
+    </main>
+
+    <script>
+        const password = document.getElementById("password");
+        const button = document.getElementById("show-password");
+        const slash = document.getElementById("eye-slash");
+
+        button.addEventListener("click", function () {
+            const show = password.type === "password";
+
+            password.type = show ? "text" : "password";
+
+            const label = show ? "Hide password" : "Show password";
+            button.setAttribute("aria-label", label);
+            button.title = label;
+
+            if (show) {
+                slash.removeAttribute("hidden");
+            } else {
+                slash.setAttribute("hidden", "");
+            }
+        });
+    </script>
+</body>
+</html>
