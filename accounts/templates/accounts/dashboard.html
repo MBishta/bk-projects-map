@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard | BK Projects Map</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            color: #193e35;
+            background: #f1f6f3;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #dce7e0;
+        }
+
+        .header-inner {
+            max-width: 1100px;
+            margin: auto;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: bold;
+        }
+
+        .logo {
+            width: 46px;
+            height: 46px;
+            display: grid;
+            place-items: center;
+            background: #174e43;
+            color: white;
+            border-radius: 14px;
+            font-size: 21px;
+        }
+
+        .brand small {
+            display: block;
+            margin-top: 5px;
+            color: #73827b;
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        .logout {
+            padding: 10px 16px;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            background: white;
+            color: #174e43;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .logout:hover { background: #edf4ef; }
+
+        main {
+            max-width: 1100px;
+            margin: auto;
+            padding: 44px 24px;
+        }
+
+        .eyebrow {
+            color: #648074;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 12px 0;
+            font-size: clamp(26px, 4vw, 36px);
+        }
+
+        .intro {
+            color: #6c7d76;
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 26px;
+            border: 1px solid #dce7e0;
+            border-radius: 18px;
+            background: white;
+            box-shadow: 0 5px 20px #173d3505;
+        }
+
+        .icon {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: #eaf3ed;
+            color: #174e43;
+            font-size: 24px;
+        }
+
+        h2 {
+            margin: 20px 0 8px;
+            font-size: 20px;
+        }
+
+        .card p {
+            margin: 0 0 24px;
+            color: #6c7d76;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .action {
+            margin-top: auto;
+            display: inline-block;
+            padding: 11px 16px;
+            border: none;
+            border-radius: 10px;
+            background: #174e43;
+            color: white;
+            text-decoration: none;
+            font: inherit;
+            font-size: 14px;
+        }
+
+        .action:disabled {
+            background: #e8edea;
+            color: #75827a;
+            cursor: not-allowed;
+        }
+
+        .note {
+            margin-top: 26px;
+            color: #73827b;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        a:focus-visible,
+        button:focus-visible {
+            outline: 2px solid #39836f;
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 850px) {
+            .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 560px) {
+            .grid { grid-template-columns: 1fr; }
+            .header-inner { padding: 16px; }
+            main { padding: 28px 16px; }
+            .brand { font-size: 14px; }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="brand">
+                <span class="logo" aria-hidden="true">BK</span>
+                <div>
+                    BK Projects Map
+                    <small>Administration</small>
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button class="logout" type="submit">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <main>
+        <div class="eyebrow">Admin Dashboard</div>
+        <h1>Welcome, {{ request.user.username }}</h1>
+        <p class="intro">
+            Manage your team and projects from one place.
+        </p>
+
+        <section class="grid" aria-label="Administration tools">
+            <article class="card">
+                <div class="icon" aria-hidden="true">♙</div>
+                <h2>View Users</h2>
+                <p>View accounts, update user details and manage access.</p>
+                <a class="action" href="{% url 'accounts:user_list' %}">
+    View Users
+</a>
+            </article>
+
+            <article class="card">
+                <div class="icon" aria-hidden="true">+</div>
+                <h2>Add User</h2>
+                <p>Create a new account and assign its role.</p>
+                <a class="action" href="{% url 'accounts:user_add' %}">
+    Add User
+</a>
+            </article>
+
+            <article class="card">
+                <div class="icon" aria-hidden="true">⌖</div>
+                <h2>Add Project</h2>
+                <p>Add project details and choose its location.</p>
+                <button class="action" disabled>Add Project</button>
+            </article>
+
+            <article class="card">
+                <div class="icon" aria-hidden="true">◎</div>
+                <h2>Projects Map</h2>
+                <p>Explore all projects on the internal map.</p>
+                <button class="action" disabled>Open Map</button>
+            </article>
+
+            <article class="card">
+                <div class="icon" aria-hidden="true">≡</div>
+                <h2>Projects List</h2>
+                <p>Browse, edit and delete projects.</p>
+                <button class="action" disabled>View Projects</button>
+            </article>
+        </section>
+
+        <p class="note">
+            These tools are being set up and will become available shortly.
+        </p>
+    </main>
+</body>
+</html>

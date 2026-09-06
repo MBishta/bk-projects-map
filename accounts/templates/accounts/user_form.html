@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add User | BK Projects Map</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #f1f6f3;
+            color: #193e35;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            background: white;
+            border-bottom: 1px solid #dce7e0;
+        }
+
+        .header-inner {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand {
+            color: #174e43;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        main {
+            max-width: 760px;
+            margin: auto;
+            padding: 32px 24px;
+        }
+
+        h1 { margin-bottom: 10px; }
+
+        .intro {
+            color: #6c7d76;
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            padding: 28px;
+            background: white;
+            border: 1px solid #dce7e0;
+            border-radius: 18px;
+        }
+
+        .field { margin-bottom: 22px; }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input:not([type="checkbox"]), select {
+            width: 100%;
+            min-height: 48px;
+            padding: 12px;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            background: white;
+            color: #193e35;
+            font: inherit;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #174e43;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .help {
+            margin-top: 8px;
+            color: #6c7d76;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .help ul { padding-left: 20px; }
+
+        .errorlist {
+            color: #94392c;
+            background: #fff0ee;
+            padding: 12px 12px 12px 28px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .error-summary {
+            padding: 12px;
+            background: #fff0ee;
+            color: #94392c;
+            border-radius: 10px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 18px;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            background: white;
+            color: #174e43;
+            text-decoration: none;
+            font: inherit;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .primary {
+            background: #174e43;
+            color: white;
+            border-color: #174e43;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        input:focus-visible,
+        select:focus-visible,
+        button:focus-visible,
+        a:focus-visible {
+            outline: 2px solid #39836f;
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 480px) {
+            main { padding: 24px 16px; }
+            .card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <a class="brand" href="{% url 'accounts:home' %}">
+                BK Projects Map
+            </a>
+
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button class="button" type="submit">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <main>
+        <h1>Add User</h1>
+        <p class="intro">
+            Create an account and choose what this user can access.
+        </p>
+
+        <form class="card"
+              method="post"
+              action="{% url 'accounts:user_add' %}">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <p class="error-summary" role="alert">
+                    Please correct the errors below.
+                </p>
+            {% endif %}
+
+            {{ form.non_field_errors }}
+
+            {% for field in form %}
+                <div class="field">
+                    {% if field.field.widget.input_type == "checkbox" %}
+                        <label class="checkbox-label"
+                               for="{{ field.id_for_label }}">
+                            {{ field }}
+                            {{ field.label }}
+                        </label>
+                    {% else %}
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label }}{% if field.field.required %} *{% endif %}
+                        </label>
+                        {{ field }}
+                    {% endif %}
+
+                    {{ field.errors }}
+
+                    {% if field.help_text %}
+                        <div class="help" id="{{ field.auto_id }}_helptext">
+                            {{ field.help_text|safe }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div class="actions">
+                <button class="button primary" type="submit">
+                    Create User
+                </button>
+                <a class="button" href="{% url 'accounts:user_list' %}">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

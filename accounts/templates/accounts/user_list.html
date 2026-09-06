@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Users | BK Projects Map</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #f1f6f3;
+            color: #193e35;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            background: white;
+            border-bottom: 1px solid #dce7e0;
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: auto;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand {
+            color: #174e43;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: auto;
+            padding: 36px 24px;
+        }
+
+        h1 { margin-bottom: 10px; }
+
+        .intro {
+            color: #6c7d76;
+            line-height: 1.7;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 11px 16px;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            background: white;
+            color: #174e43;
+            text-decoration: none;
+            font: inherit;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .button:hover { background: #edf4ef; }
+
+        .table-box {
+            overflow-x: auto;
+            border: 1px solid #dce7e0;
+            border-radius: 16px;
+            background: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 16px;
+            border-bottom: 1px solid #e7eee9;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #eaf3ed;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        td {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: #eaf3ed;
+            color: #174e43;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .inactive {
+            background: #fff0ee;
+            color: #94392c;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .actions button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            font: inherit;
+            background: #edf0ee;
+            color: #75827a;
+            cursor: not-allowed;
+        }
+
+        .you {
+            margin-left: 6px;
+            color: #6c7d76;
+            font-size: 12px;
+        }
+
+        .note {
+            color: #73827b;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        a:focus-visible,
+        button:focus-visible {
+            outline: 2px solid #39836f;
+            outline-offset: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-inner">
+            <a class="brand" href="{% url 'accounts:home' %}">
+                BK Projects Map
+            </a>
+
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button class="button" type="submit">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <main>
+        <div class="toolbar">
+            <div>
+                <h1>Users</h1>
+                <p class="intro">
+                    {{ rows|length }} account{{ rows|length|pluralize }}
+                </p>
+            </div>
+
+            <a class="button" href="{% url 'accounts:home' %}">
+                Back to Dashboard
+            </a>
+        </div>
+
+        <div class="table-box">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Username</th>
+                        <th scope="col">Full Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Role</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <td>
+                                {{ row.account.username }}
+                                {% if row.account.pk == request.user.pk %}
+                                    <span class="you">(You)</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ row.account.get_full_name|default:"—" }}
+                            </td>
+                            <td>{{ row.account.email|default:"—" }}</td>
+                            <td>
+                                <span class="badge">{{ row.role }}</span>
+                            </td>
+                            <td>
+                                {% if row.account.is_active %}
+                                    <span class="badge">Active</span>
+                                {% else %}
+                                    <span class="badge inactive">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="actions">
+                                    <a class="button"
+   href="{% url 'accounts:user_edit' row.account.pk %}">
+    Edit
+</a>
+                                    {% if row.account.pk == request.user.pk or row.account.is_superuser %}
+    <button type="button" disabled title="Protected account">
+        Delete
+    </button>
+{% else %}
+    <a class="button"
+       href="{% url 'accounts:user_delete' row.account.pk %}">
+        Delete
+    </a>
+{% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6">No users found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        
+    </main>
+</body>
+</html>

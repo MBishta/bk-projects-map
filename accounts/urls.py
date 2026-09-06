@@ -1,14 +1,28 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
-
-from .views import AccountLoginView, home
-
+from .views import (
+    AccountLoginView,
+    home,
+    user_list,
+    user_add,
+    user_edit,
+    user_delete,
+)
+ 
 app_name = "accounts"
 
 urlpatterns = [
     path("", home, name="home"),
 
+    path("users/", user_list, name="user_list"),
+
+    path("users/add/", user_add, name="user_add"),
+
     path("login/", AccountLoginView.as_view(), name="login"),
+
+    path("users/<int:user_id>/delete/", user_delete, name="user_delete"),
+
+    path("users/<int:user_id>/edit/", user_edit, name="user_edit"),
 
     path(
         "logout/",

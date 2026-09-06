@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delete User | BK Projects Map</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            font-family: Arial, sans-serif;
+            background: #f1f6f3;
+            color: #193e35;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 500px;
+            padding: 32px;
+            border: 1px solid #dce7e0;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 12px 40px #173d3510;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 26px;
+        }
+
+        p {
+            line-height: 1.7;
+            color: #6c7d76;
+        }
+
+        .details {
+            padding: 16px;
+            border-radius: 12px;
+            background: #f1f6f3;
+            margin: 20px 0;
+            overflow-wrap: anywhere;
+        }
+
+        .details p { margin: 6px 0; }
+
+        .warning {
+            padding: 14px;
+            border-radius: 10px;
+            background: #fff0ee;
+            color: #94392c;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 18px;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            background: white;
+            color: #174e43;
+            font: inherit;
+            font-size: 14px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .danger {
+            background: #a7372c;
+            border-color: #a7372c;
+            color: white;
+        }
+
+        .danger:hover { background: #86291f; }
+
+        a:focus-visible,
+        button:focus-visible {
+            outline: 2px solid #39836f;
+            outline-offset: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="card">
+        <h1>Delete User</h1>
+
+        <div class="details">
+            <p><strong>Username:</strong> {{ account.username }}</p>
+            <p>
+                <strong>Full Name:</strong>
+                {{ account.get_full_name|default:"—" }}
+            </p>
+            <p><strong>Email:</strong> {{ account.email|default:"—" }}</p>
+        </div>
+
+        {% if blocked_reason %}
+            <p class="warning" role="alert">{{ blocked_reason }}</p>
+
+            <a class="button" href="{% url 'accounts:user_list' %}">
+                Back to Users
+            </a>
+        {% else %}
+            <p class="warning">
+                This will permanently delete this user account.
+                This action cannot be undone.
+            </p>
+
+            <form method="post"
+                  action="{% url 'accounts:user_delete' account.pk %}">
+                {% csrf_token %}
+
+                <div class="actions">
+                    <button class="button danger" type="submit">
+                        Confirm Delete
+                    </button>
+
+                    <a class="button" href="{% url 'accounts:user_list' %}">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        {% endif %}
+    </main>
+</body>
+</html>
