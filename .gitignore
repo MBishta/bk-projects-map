@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Local database
+db.sqlite3
+db.sqlite3-journal
+db.sqlite3-wal
+db.sqlite3-shm
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Uploaded and generated files
+media/
+staticfiles/
+*.log
+
+# macOS
+.DS_Store
+._*
