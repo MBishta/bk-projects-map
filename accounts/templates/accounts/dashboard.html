@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
@@ -178,7 +179,13 @@
     <header class="header">
         <div class="header-inner">
             <div class="brand">
-                <span class="logo" aria-hidden="true">BK</span>
+                <img
+    src="{% static 'projects/images/company-logo.jpeg' %}"
+    alt="Badria Kafood Architecture"
+    width="60"
+    height="60"
+    style="display: block; object-fit: contain; flex-shrink: 0;"
+>
                 <div>
                     BK Projects Map
                     <small>

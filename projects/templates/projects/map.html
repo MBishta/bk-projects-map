@@ -1,9 +1,10 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>BK Projects Map</title>
+    <title>badriakafood projects</title>
 
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -27,21 +28,57 @@
             height: 100dvh;
         }
 
-        .filters {
+        .corner-logo {
             position: fixed;
-            top: 16px;
+            top: max(12px, env(safe-area-inset-top));
             right: 12px;
-            left: 60px;
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            z-index: 1100;
+        }
+
+        .map-header {
+            position: fixed;
+            top: max(12px, env(safe-area-inset-top));
+            right: 84px;
+            left: 84px;
             z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .map-title {
+            max-width: 100%;
+            margin: 0;
+            padding: 10px 18px;
+            border: 1px solid #dce5e2;
+            border-radius: 12px;
+            background: white;
+            color: #174e43;
+            box-shadow: 0 3px 12px #0002;
+            font-size: 20px;
+            line-height: 1.4;
+            text-align: center;
+            overflow-wrap: anywhere;
+            pointer-events: auto;
+        }
+
+        .filters {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
             gap: 8px;
+            pointer-events: auto;
         }
 
         .filters button {
             border: 1px solid #dce5e2;
             background: white;
+            color: #18342f;
             padding: 11px 16px;
             border-radius: 24px;
             box-shadow: 0 3px 12px #0002;
@@ -71,13 +108,8 @@
             box-shadow: 0 3px 10px #0005;
         }
 
-        .marker-label.finishing {
-            background: #b76b18;
-        }
-
-        .marker-label.both {
-            background: #6551a4;
-        }
+        .marker-label.finishing { background: #b76b18; }
+        .marker-label.both { background: #6551a4; }
 
         .sheet {
             position: fixed;
@@ -113,6 +145,7 @@
             width: 100%;
             text-align: right;
             background: #f3f7f5;
+            color: #18342f;
             border: 1px solid #e0e9e5;
             border-radius: 12px;
             padding: 14px;
@@ -144,10 +177,6 @@
             font-weight: bold;
         }
 
-        .leaflet-control-attribution {
-            font-size: 10px;
-        }
-
         .map-back {
             position: fixed;
             bottom: 24px;
@@ -162,65 +191,82 @@
             border-radius: 14px;
             background: #174e43;
             color: white;
+            box-shadow: 0 4px 16px #0003;
             text-decoration: none;
-            font-weight: bold;
-            box-shadow: 0 4px 18px #0003;
             direction: ltr;
         }
 
-        .map-back:hover {
-            background: #103b32;
-        }
+        .map-back:hover { background: #103b32; }
 
-        a:focus-visible,
-        button:focus-visible {
-            outline: 3px solid #39836f;
+        button:focus-visible,
+        a:focus-visible {
+            outline: 3px solid #48becb;
             outline-offset: 3px;
         }
 
+        .leaflet-control-attribution { font-size: 10px; }
+
         @media (max-width: 900px) {
-            body.internal-map .sheet {
-                bottom: 88px;
+            body.internal-map .sheet { bottom: 88px; }
+        }
+
+        @media (max-width: 480px) {
+            .corner-logo {
+                width: 48px;
+                height: 48px;
+                right: 8px;
+            }
+
+            .map-header {
+                right: 58px;
+                left: 58px;
+                gap: 10px;
+            }
+
+            .map-title {
+                padding: 9px 12px;
+                font-size: 15px;
+            }
+
+            .filters { gap: 6px; }
+
+            .filters button {
+                padding: 9px 12px;
+                font-size: 13px;
             }
         }
     </style>
 </head>
 
 <body class="{% if internal_map %}internal-map{% endif %}">
-    {% if internal_map %}
-        <a class="map-back"
-           href="{% url 'project-list' %}"
-           aria-label="Back to projects list">
-            <svg width="20"
-                 height="20"
-                 viewBox="0 0 24 24"
-                 fill="none"
-                 stroke="currentColor"
-                 stroke-width="2"
-                 stroke-linecap="round"
-                 stroke-linejoin="round"
-                 aria-hidden="true"
-                 focusable="false">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-            <span>Back</span>
-        </a>
-    {% endif %}
+    <img
+        class="corner-logo"
+        src="{% static 'projects/images/company-logo.jpeg' %}"
+        alt="Badria Kafood Architecture"
+        width="64"
+        height="64"
+    >
 
-    <nav class="filters" aria-label="نوع الأعمال">
-        <button type="button" data-type="all" aria-pressed="true">
-            الكل
-        </button>
-        <button type="button" data-type="structure" aria-pressed="false">
-            عظم
-        </button>
-        <button type="button" data-type="finishing" aria-pressed="false">
-            تشطيب
-        </button>
-        <button type="button" data-type="both" aria-pressed="false">
-            عظم وتشطيب
-        </button>
-    </nav>
+    <header class="map-header">
+        <h1 class="map-title" lang="en" dir="ltr">
+            Badriakafood Projects
+        </h1>
+
+        <nav class="filters" aria-label="نوع الأعمال">
+            <button type="button" data-type="all" aria-pressed="true">
+                الكل
+            </button>
+            <button type="button" data-type="structure" aria-pressed="false">
+                عظم
+            </button>
+            <button type="button" data-type="finishing" aria-pressed="false">
+                تشطيب
+            </button>
+            <button type="button" data-type="both" aria-pressed="false">
+                عظم وتشطيب
+            </button>
+        </nav>
+    </header>
 
     <div id="map" aria-label="خريطة المشاريع"></div>
 
@@ -236,20 +282,65 @@
     </section>
 
     {% if internal_map %}
+        <a class="map-back"
+           href="{% url 'project-list' %}"
+           aria-label="Back to projects list">
+            <svg width="20" height="20" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+                <path d="M19 12H5M12 19l-7-7 7-7"></path>
+            </svg>
+            <span>Back</span>
+        </a>
+
         {{ map_projects|json_script:"internal-projects-data" }}
     {% endif %}
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        const status = document.getElementById("status");
+        const statusElement = document.getElementById("status");
         const list = document.getElementById("project-list");
         const toggle = document.getElementById("toggle-list");
         const filters = document.querySelectorAll("[data-type]");
+        const header = document.querySelector(".map-header");
+        const sheet = document.querySelector(".sheet");
 
         let projects = [];
         let selectedType = "all";
         let visibleCount = 0;
+
+                function updateFilterCounts() {
+            const labels = {
+                all: "الكل",
+                structure: "عظم",
+                finishing: "تشطيب",
+                both: "عظم وتشطيب"
+            };
+
+            const counts = {
+                all: projects.length,
+                structure: 0,
+                finishing: 0,
+                both: 0
+            };
+
+            projects.forEach(project => {
+                if (
+                    ["structure", "finishing", "both"].includes(
+                        project.work_type
+                    )
+                ) {
+                    counts[project.work_type] += 1;
+                }
+            });
+
+            filters.forEach(button => {
+                const type = button.dataset.type;
+                button.textContent = `${labels[type]} (${counts[type]})`;
+            });
+        }
 
         function updateListButton() {
             const open = !list.hidden;
@@ -265,7 +356,7 @@
 
         async function startMap() {
             if (!window.L) {
-                status.textContent =
+                statusElement.textContent =
                     "تعذر تحميل مكتبة الخريطة. تحقق من الإنترنت وحدّث الصفحة.";
                 return;
             }
@@ -318,8 +409,9 @@
                 visibleCount = visible.length;
                 updateListButton();
 
-                status.hidden = visibleCount > 0;
-                status.textContent = "لا توجد مشاريع في هذا التصنيف.";
+                statusElement.hidden = visibleCount > 0;
+                statusElement.textContent =
+                    "لا توجد مشاريع في هذا التصنيف.";
 
                 visible.forEach(project => {
                     const lat = Number(project.latitude);
@@ -369,9 +461,22 @@
                 });
 
                 if (visibleCount > 0) {
+                    const mapHeight = map.getSize().y;
+
+                    const topPadding = Math.min(
+                        header.getBoundingClientRect().bottom + 20,
+                        mapHeight * 0.35
+                    );
+
+                    const bottomPadding = Math.min(
+                        window.innerHeight -
+                            sheet.getBoundingClientRect().top + 20,
+                        mapHeight * 0.35
+                    );
+
                     map.fitBounds(markers.getBounds(), {
-                        paddingTopLeft: [60, 100],
-                        paddingBottomRight: [30, 150],
+                        paddingTopLeft: [60, topPadding],
+                        paddingBottomRight: [30, bottomPadding],
                         maxZoom: 14
                     });
                 }
@@ -419,10 +524,11 @@
                 }
 
                 projects = data;
+                updateFilterCounts();
                 renderProjects();
             } catch (error) {
-                status.hidden = false;
-                status.textContent =
+                statusElement.hidden = false;
+                statusElement.textContent =
                     "تعذر تحميل المشاريع. حدّث الصفحة للمحاولة مرة أخرى.";
             }
         }
