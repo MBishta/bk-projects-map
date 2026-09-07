@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ project.public_name }} | BK Projects Map</title>
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #193e35;
+        }
+
+        #map {
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        .panel {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            left: 64px;
+            z-index: 1000;
+            max-width: 440px;
+            margin-left: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px #0002;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 20px;
+            overflow-wrap: anywhere;
+        }
+
+        p {
+            margin: 0 0 16px;
+            color: #6c7d76;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 14px;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            color: #174e43;
+            background: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .primary {
+            background: #174e43;
+            color: white;
+            border-color: #174e43;
+        }
+
+        a:focus-visible {
+            outline: 2px solid #39836f;
+            outline-offset: 3px;
+        }
+
+        #status {
+            margin-top: 12px;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <section class="panel" aria-label="Project information">
+        <h1>{{ project.reference }} — {{ project.public_name }}</h1>
+        <p>{{ project.area }}</p>
+
+        <div class="actions">
+            <a class="button" href="{% url 'project-list' %}">
+                Back to Projects
+            </a>
+
+            <a class="button primary"
+               id="google-maps"
+               target="_blank"
+               rel="noopener noreferrer"
+               hidden>
+                Google Maps
+            </a>
+        </div>
+
+        <p id="status" role="status"></p>
+    </section>
+
+    <div id="map" aria-label="Project location"></div>
+
+    {{ location|json_script:"project-location-data" }}
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const project = JSON.parse(
+            document.getElementById("project-location-data").textContent
+        );
+
+        const googleLink = document.getElementById("google-maps");
+        googleLink.href =
+            "https://www.google.com/maps/search/?api=1&query=" +
+            encodeURIComponent(
+                `${project.latitude},${project.longitude}`
+            );
+        googleLink.hidden = false;
+
+        if (!window.L) {
+            document.getElementById("status").textContent =
+                "Unable to load the map. Check your internet connection.";
+        } else {
+            const coordinates = [project.latitude, project.longitude];
+
+            const map = L.map("map").setView(coordinates, 16);
+
+            L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+                    maxZoom: 19,
+                    attribution:
+                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }
+            ).addTo(map);
+
+            const popup = document.createElement("strong");
+            popup.textContent = `${project.reference} — ${project.name}`;
+
+            L.marker(coordinates, {title: project.name})
+                .addTo(map)
+                .bindPopup(popup)
+                .openPopup();
+        }
+    </script>
+</body>
+</html>

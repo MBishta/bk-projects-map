@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin Dashboard | BK Projects Map</title>
+    <title>Dashboard | BK Projects Map</title>
 
     <style>
         * { box-sizing: border-box; }
@@ -147,17 +147,10 @@
             font-size: 14px;
         }
 
-        .action:disabled {
-            background: #e8edea;
-            color: #75827a;
-            cursor: not-allowed;
-        }
+        .action:hover { background: #103b32; }
 
-        .note {
-            margin-top: 26px;
-            color: #73827b;
-            font-size: 13px;
-            line-height: 1.7;
+        .empty-state {
+            grid-column: 1 / -1;
         }
 
         a:focus-visible,
@@ -167,7 +160,9 @@
         }
 
         @media (max-width: 850px) {
-            .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
         @media (max-width: 560px) {
@@ -186,7 +181,13 @@
                 <span class="logo" aria-hidden="true">BK</span>
                 <div>
                     BK Projects Map
-                    <small>Administration</small>
+                    <small>
+                        {% if is_admin %}
+                            Administration
+                        {% else %}
+                            Project Workspace
+                        {% endif %}
+                    </small>
                 </div>
             </div>
 
@@ -198,56 +199,108 @@
     </header>
 
     <main>
-        <div class="eyebrow">Admin Dashboard</div>
+        <div class="eyebrow">
+            {% if is_admin %}
+                Admin Dashboard
+            {% else %}
+                Dashboard
+            {% endif %}
+        </div>
+
         <h1>Welcome, {{ request.user.username }}</h1>
+
         <p class="intro">
-            Manage your team and projects from one place.
+            {% if is_admin %}
+                Manage your team and projects from one place.
+            {% elif perms.projects.add_project or perms.projects.change_project %}
+                Access your projects and keep their details up to date.
+            {% else %}
+                Explore project locations and browse the project list.
+            {% endif %}
         </p>
 
-        <section class="grid" aria-label="Administration tools">
-            <article class="card">
-                <div class="icon" aria-hidden="true">♙</div>
-                <h2>View Users</h2>
-                <p>View accounts, update user details and manage access.</p>
-                <a class="action" href="{% url 'accounts:user_list' %}">
-    View Users
-</a>
-            </article>
+        <section class="grid" aria-label="Dashboard tools">
 
-            <article class="card">
-                <div class="icon" aria-hidden="true">+</div>
-                <h2>Add User</h2>
-                <p>Create a new account and assign its role.</p>
-                <a class="action" href="{% url 'accounts:user_add' %}">
-    Add User
-</a>
-            </article>
+                        {% if is_admin %}
+                <article class="card">
+                    <div class="icon" aria-hidden="true">⚙</div>
+                    <h2>Roles &amp; Permissions</h2>
+                    <p>Create roles and manage access to project tools.</p>
+                    <a class="action" href="{% url 'accounts:role_list' %}">
+                        Manage Roles
+                    </a>
+                </article>
+            {% endif %}
+            
+            {% if is_admin %}
+                <article class="card">
+                    <div class="icon" aria-hidden="true">♙</div>
+                    <h2>View Users</h2>
+                    <p>View accounts, update user details and manage access.</p>
+                    <a class="action" href="{% url 'accounts:user_list' %}">
+                        View Users
+                    </a>
+                </article>
 
-            <article class="card">
-                <div class="icon" aria-hidden="true">⌖</div>
-                <h2>Add Project</h2>
-                <p>Add project details and choose its location.</p>
-                <button class="action" disabled>Add Project</button>
-            </article>
+                <article class="card">
+                    <div class="icon" aria-hidden="true">+</div>
+                    <h2>Add User</h2>
+                    <p>Create a new account and assign its role.</p>
+                    <a class="action" href="{% url 'accounts:user_add' %}">
+                        Add User
+                    </a>
+                </article>
+            {% endif %}
 
-            <article class="card">
-                <div class="icon" aria-hidden="true">◎</div>
-                <h2>Projects Map</h2>
-                <p>Explore all projects on the internal map.</p>
-                <button class="action" disabled>Open Map</button>
-            </article>
+            {% if perms.projects.add_project %}
+                <article class="card">
+                    <div class="icon" aria-hidden="true">⌖</div>
+                    <h2>Add Project</h2>
+                    <p>Add project details and choose its location.</p>
+                    <a class="action" href="{% url 'project-create' %}">
+                        Add Project
+                    </a>
+                </article>
+            {% endif %}
 
-            <article class="card">
-                <div class="icon" aria-hidden="true">≡</div>
-                <h2>Projects List</h2>
-                <p>Browse, edit and delete projects.</p>
-                <button class="action" disabled>View Projects</button>
-            </article>
+            {% if perms.projects.view_project %}
+                <article class="card">
+                    <div class="icon" aria-hidden="true">◎</div>
+                    <h2>Projects Map</h2>
+                    <p>Explore all projects on the internal map.</p>
+                    <a class="action" href="{% url 'projects-map' %}">
+                        Open Map
+                    </a>
+                </article>
+
+                <article class="card">
+                    <div class="icon" aria-hidden="true">≡</div>
+                    <h2>Projects List</h2>
+                    <p>
+                        {% if is_admin %}
+                            Browse, edit and delete projects.
+                        {% elif perms.projects.change_project %}
+                            Browse projects and update their details.
+                        {% else %}
+                            Browse project details and view their locations.
+                        {% endif %}
+                    </p>
+                    <a class="action" href="{% url 'project-list' %}">
+                        View Projects
+                    </a>
+                </article>
+            {% endif %}
+
+            {% if not is_admin and not perms.projects.add_project and not perms.projects.view_project %}
+                <article class="card empty-state">
+                    <h2>No tools available</h2>
+                    <p>
+                        Contact your administrator to assign access
+                        to the project tools.
+                    </p>
+                </article>
+            {% endif %}
         </section>
-
-        <p class="note">
-            These tools are being set up and will become available shortly.
-        </p>
     </main>
 </body>
 </html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Roles &amp; Permissions | BK Projects Map</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #f1f6f3;
+            color: #193e35;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            background: white;
+            border-bottom: 1px solid #dce7e0;
+        }
+
+        .header-inner {
+            max-width: 1100px;
+            margin: auto;
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand {
+            color: #174e43;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: auto;
+            padding: 32px 24px;
+        }
+
+        h1 { margin-bottom: 10px; }
+        h2 { margin-top: 0; }
+
+        .intro, .help {
+            color: #6c7d76;
+            line-height: 1.7;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 24px;
+            align-items: start;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #dce7e0;
+            border-radius: 18px;
+            padding: 24px;
+            min-width: 0;
+        }
+
+        .field { margin-bottom: 24px; }
+
+        .field > label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            font: inherit;
+        }
+
+        #id_permissions label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            line-height: 1.5;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #174e43;
+            flex-shrink: 0;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 11px 16px;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            background: white;
+            color: #174e43;
+            text-decoration: none;
+            font: inherit;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .primary {
+            background: #174e43;
+            color: white;
+            border-color: #174e43;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .role {
+            padding: 18px 0;
+            border-bottom: 1px solid #e7eee9;
+            overflow-wrap: anywhere;
+        }
+
+        .role:last-child { border-bottom: none; }
+        .role h3 { margin: 0 0 10px; }
+
+        .role ul {
+            padding-left: 20px;
+            color: #6c7d76;
+            line-height: 1.7;
+        }
+
+        .errorlist {
+            color: #94392c;
+            background: #fff0ee;
+            padding: 12px 12px 12px 30px;
+            border-radius: 10px;
+            line-height: 1.6;
+        }
+
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible {
+            outline: 2px solid #39836f;
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 760px) {
+            .layout { grid-template-columns: 1fr; }
+            main { padding: 24px 16px; }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-inner">
+            <a class="brand" href="{% url 'accounts:home' %}">
+                BK Projects Map
+            </a>
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button class="button" type="submit">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <main>
+        <h1>Roles &amp; Permissions</h1>
+        <p class="intro">
+            Create roles and choose which project tools they can use.
+            Changes apply to all users assigned to the role.
+        </p>
+
+        <a class="button" href="{% url 'accounts:home' %}">
+            Back to Dashboard
+        </a>
+
+        <div class="layout">
+            <section class="card">
+                <h2>
+                    {% if editing_role %}
+                        Edit Role
+                    {% else %}
+                        Add Role
+                    {% endif %}
+                </h2>
+
+                <form method="post"
+                      action="{% if editing_role %}{% url 'accounts:role_edit' editing_role.pk %}{% else %}{% url 'accounts:role_list' %}{% endif %}">
+                    {% csrf_token %}
+
+                    {{ form.non_field_errors }}
+
+                    {% for field in form %}
+                        <div class="field">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {{ field.errors }}
+                        </div>
+                    {% endfor %}
+
+                    <p class="help">
+                        User management and role management are reserved
+                        for Admin. Delete Projects allows permanent deletion
+                        after confirmation.
+                    </p>
+
+                    <div class="actions">
+                        <button class="button primary" type="submit">
+                            {% if editing_role %}
+                                Save Changes
+                            {% else %}
+                                Create Role
+                            {% endif %}
+                        </button>
+
+                        {% if editing_role %}
+                            <a class="button"
+                               href="{% url 'accounts:role_list' %}">
+                                Cancel
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </section>
+
+            <section class="card">
+                <h2>Existing Roles</h2>
+
+                {% for row in rows %}
+                    <article class="role">
+                        <h3>{{ row.role.name }}</h3>
+
+                        {% if row.protected %}
+                            <p class="help">
+                                Full management access. Protected role.
+                            </p>
+                        {% else %}
+                            <ul>
+                                {% for label in row.labels %}
+                                    <li>{{ label }}</li>
+                                {% empty %}
+                                    <li>No project permissions assigned.</li>
+                                {% endfor %}
+                            </ul>
+
+                            <a class="button"
+                               href="{% url 'accounts:role_edit' row.role.pk %}">
+                                Edit
+                            </a>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </section>
+        </div>
+    </main>
+</body>
+</html>

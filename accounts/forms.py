@@ -2,10 +2,23 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import Group
-from django.db import transaction
 from django.contrib.auth.password_validation import validate_password
+from django.db import transaction
+
 
 User = get_user_model()
+
+
+def get_role_choices():
+    return [
+        ("", "Select a role"),
+        *[
+            (name, name)
+            for name in Group.objects.order_by("name").values_list(
+                "name", flat=True
+            )
+        ],
+    ]
 
 
 class AddUserForm(UserCreationForm):
@@ -15,12 +28,7 @@ class AddUserForm(UserCreationForm):
     )
 
     role = forms.ChoiceField(
-        choices=[
-            ("Viewer", "Viewer — View only"),
-            ("User", "User — Add and edit projects"),
-            ("Admin", "Admin — Full management"),
-        ],
-        initial="Viewer",
+        choices=[],
         label="Role",
     )
 
@@ -46,6 +54,13 @@ class AddUserForm(UserCreationForm):
             "is_active": "Inactive users cannot sign in.",
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["role"].choices = get_role_choices()
+
+        if Group.objects.filter(name="Viewer").exists():
+            self.fields["role"].initial = "Viewer"
+
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
 
@@ -70,7 +85,6 @@ class AddUserForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
 
-        # Roles control access through the custom management pages.
         user.is_staff = False
         user.is_superuser = False
 
@@ -91,11 +105,7 @@ class EditUserForm(forms.ModelForm):
     )
 
     role = forms.ChoiceField(
-        choices=[
-            ("Viewer", "Viewer — View only"),
-            ("User", "User — Add and edit projects"),
-            ("Admin", "Admin — Full management"),
-        ],
+        choices=[],
         label="Role",
     )
 
@@ -136,25 +146,33 @@ class EditUserForm(forms.ModelForm):
     def __init__(self, *args, actor, **kwargs):
         super().__init__(*args, **kwargs)
         self.actor = actor
+        self.fields["role"].choices = get_role_choices()
 
-        groups = set(
-            self.instance.groups.values_list("name", flat=True)
+        groups = list(
+            self.instance.groups.order_by("name").values_list(
+                "name", flat=True
+            )
         )
 
-        if self.instance.is_superuser or "Admin" in groups:
+        if "Admin" in groups:
             current_role = "Admin"
         elif "User" in groups:
             current_role = "User"
         elif "Viewer" in groups:
             current_role = "Viewer"
         else:
-            current_role = ""
+            current_role = groups[0] if groups else ""
 
-        self.fields["role"].initial = current_role
+        self.initial["role"] = current_role
 
-        # Keep the current administrator's access intact.
-        if self.instance.pk == actor.pk or self.instance.is_superuser:
+        self.protect_access = (
+            self.instance.pk == actor.pk
+            or self.instance.is_superuser
+        )
+
+        if self.protect_access:
             self.fields["role"].disabled = True
+            self.fields["role"].required = False
             self.fields["is_active"].disabled = True
 
     def clean_email(self):
@@ -172,7 +190,10 @@ class EditUserForm(forms.ModelForm):
         return email
 
     def clean_role(self):
-        role = self.cleaned_data["role"]
+        role = self.cleaned_data.get("role", "")
+
+        if self.protect_access:
+            return role
 
         if not Group.objects.filter(name=role).exists():
             raise forms.ValidationError(
@@ -198,7 +219,6 @@ class EditUserForm(forms.ModelForm):
                 "Only administrators can edit users."
             )
 
-        # Only a superuser may edit a superuser account.
         if self.instance.is_superuser and not self.actor.is_superuser:
             raise forms.ValidationError(
                 "You cannot edit this administrator account."
@@ -218,7 +238,6 @@ class EditUserForm(forms.ModelForm):
     def _post_clean(self):
         super()._post_clean()
 
-        # Validate against the updated username, name and email.
         password = self.cleaned_data.get("new_password1")
 
         if password:
@@ -237,10 +256,12 @@ class EditUserForm(forms.ModelForm):
 
         if commit:
             user.save()
-            user.groups.set([
-                Group.objects.get(
-                    name=self.cleaned_data["role"]
-                )
-            ])
+
+            if not self.protect_access:
+                user.groups.set([
+                    Group.objects.get(
+                        name=self.cleaned_data["role"]
+                    )
+                ])
 
         return user

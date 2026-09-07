@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Projects | BK Projects Map</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #f1f6f3;
+            color: #193e35;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            background: white;
+            border-bottom: 1px solid #dce7e0;
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: auto;
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand {
+            color: #174e43;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: auto;
+            padding: 32px 24px;
+        }
+
+        h1 { margin-bottom: 10px; }
+
+        .intro { color: #6c7d76; }
+
+        .toolbar, .actions, .search {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .toolbar {
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 11px 16px;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            background: white;
+            color: #174e43;
+            text-decoration: none;
+            font: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .primary {
+            background: #174e43;
+            color: white;
+            border-color: #174e43;
+        }
+
+        .button:disabled {
+            background: #edf0ee;
+            color: #75827a;
+            cursor: not-allowed;
+        }
+
+        .search { margin-bottom: 24px; }
+
+        .search input {
+            flex: 1;
+            min-width: 180px;
+            padding: 12px;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            font: inherit;
+        }
+
+        .table-box {
+            overflow-x: auto;
+            background: white;
+            border: 1px solid #dce7e0;
+            border-radius: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 15px;
+            border-bottom: 1px solid #e7eee9;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        th {
+            background: #eaf3ed;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        .project-link {
+            color: #174e43;
+            font-weight: bold;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: #eaf3ed;
+            color: #174e43;
+            font-size: 12px;
+        }
+
+        .private {
+            background: #f3eee4;
+            color: #806026;
+        }
+
+        input:focus-visible,
+        button:focus-visible,
+        a:focus-visible {
+            outline: 2px solid #39836f;
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 560px) {
+            main { padding: 24px 16px; }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-inner">
+            <a class="brand" href="{% url 'accounts:home' %}">
+                BK Projects Map
+            </a>
+
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button class="button" type="submit">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <main>
+        <div class="toolbar">
+            <div>
+                <h1>Projects</h1>
+                <p class="intro">
+                    {{ projects|length }} project{{ projects|length|pluralize }}
+                    {% if query %} matching your search{% endif %}
+                </p>
+            </div>
+
+            <div class="actions">
+                <a class="button" href="{% url 'projects-map' %}">
+                    Projects Map
+                </a>
+
+                {% if perms.projects.add_project %}
+                    <a class="button primary"
+                       href="{% url 'project-create' %}">
+                        Add Project
+                    </a>
+                {% endif %}
+
+                <a class="button" href="{% url 'accounts:home' %}">
+                    Back
+                </a>
+            </div>
+        </div>
+
+        <form class="search" method="get" action="{% url 'project-list' %}">
+            <input
+                type="search"
+                name="q"
+                value="{{ query }}"
+                placeholder="Search reference, project, client or area"
+                aria-label="Search projects"
+            >
+            <button class="button primary" type="submit">Search</button>
+
+            {% if query %}
+                <a class="button" href="{% url 'project-list' %}">
+                    Clear
+                </a>
+            {% endif %}
+        </form>
+
+        <div class="table-box">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Reference</th>
+                        <th scope="col">Project</th>
+                        <th scope="col">Client</th>
+                        <th scope="col">Work Type</th>
+                        <th scope="col">Area</th>
+                        <th scope="col">Visibility</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for project in projects %}
+                        <tr>
+                            <td>{{ project.reference }}</td>
+                            <td>
+                                <a class="project-link"
+                                   href="{% url 'project-location' project.pk %}">
+                                    {{ project.public_name }}
+                                </a>
+                            </td>
+                            <td>{{ project.client_name|default:"—" }}</td>
+                            <td>
+                                {% if project.work_type == "structure" %}
+                                    Structure
+                                {% elif project.work_type == "finishing" %}
+                                    Finishing
+                                {% elif project.work_type == "both" %}
+                                    Structure &amp; Finishing
+                                {% else %}
+                                    {{ project.work_type }}
+                                {% endif %}
+                            </td>
+                            <td>{{ project.area }}</td>
+                            <td>
+                                {% if project.is_public %}
+                                    <span class="badge">Public</span>
+                                {% else %}
+                                    <span class="badge private">Private</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="actions">
+                                    {% if perms.projects.change_project %}
+                                        <a class="button"
+                                           href="{% url 'project-edit' project.pk %}"
+                                           aria-label="Edit project {{ project.reference }}">
+                                            Edit
+                                        </a>
+                                    {% endif %}
+
+                                     {% if can_delete_projects %}
+                                        <a class="button"
+                                           href="{% url 'project-delete' project.pk %}"
+                                           aria-label="Delete project {{ project.reference }}">
+                                            Delete
+                                        </a>
+                                    {% endif %}
+
+                                    {% if not perms.projects.change_project and not can_delete_projects %}
+                                        <span>View only</span>
+                                    {% endif %} 
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7">No projects found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

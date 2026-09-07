@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% if is_edit %}Edit Project{% else %}Add Project{% endif %} | BK Projects Map</title>
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #193e35;
+            background: #f1f6f3;
+        }
+
+        header {
+            background: white;
+            border-bottom: 1px solid #dce7e0;
+        }
+
+        .header-inner {
+            max-width: 1000px;
+            margin: auto;
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand {
+            color: #174e43;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 900px;
+            margin: auto;
+            padding: 32px 24px;
+        }
+
+        h1 { margin-bottom: 10px; }
+
+        .intro, .help {
+            color: #6c7d76;
+            line-height: 1.6;
+        }
+
+        .card {
+            margin-top: 24px;
+            padding: 28px;
+            background: white;
+            border: 1px solid #dce7e0;
+            border-radius: 18px;
+        }
+
+        .field { margin-bottom: 22px; }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input:not([type="checkbox"]):not([type="hidden"]),
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            background: white;
+            color: #193e35;
+            font: inherit;
+        }
+
+        input:not([type="checkbox"]):not([type="hidden"]),
+        select {
+            min-height: 48px;
+        }
+
+        textarea { resize: vertical; }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #174e43;
+        }
+
+        .help {
+            margin-top: 8px;
+            font-size: 13px;
+        }
+
+        .errorlist, .error-summary {
+            background: #fff0ee;
+            color: #94392c;
+            padding: 12px;
+            border-radius: 10px;
+            line-height: 1.6;
+        }
+
+        .errorlist {
+            padding-left: 28px;
+            font-size: 14px;
+        }
+
+        #location-map {
+            height: 360px;
+            border: 1px solid #cad8d1;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 18px;
+            border: 1px solid #cad8d1;
+            border-radius: 10px;
+            background: white;
+            color: #174e43;
+            text-decoration: none;
+            font: inherit;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .primary {
+            background: #174e43;
+            border-color: #174e43;
+            color: white;
+        }
+
+        .primary:hover { background: #103b32; }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible,
+        button:focus-visible,
+        a:focus-visible {
+            outline: 2px solid #39836f;
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 480px) {
+            main { padding: 24px 16px; }
+            .card { padding: 20px; }
+            #location-map { height: 300px; }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-inner">
+            <a class="brand" href="{% url 'accounts:home' %}">
+                BK Projects Map
+            </a>
+
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button class="button" type="submit">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <main>
+        {% if is_edit %}
+            <h1>Edit Project</h1>
+            <p class="intro">
+                Update the details and location of {{ project.reference }}.
+            </p>
+        {% else %}
+            <h1>Add Project</h1>
+            <p class="intro">
+                Enter project details and select its location on the map.
+            </p>
+        {% endif %}
+
+        <form class="card"
+              method="post"
+              action="{% if is_edit %}{% url 'project-edit' project.pk %}{% else %}{% url 'project-create' %}{% endif %}">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <p class="error-summary" role="alert">
+                    Please correct the errors below.
+                </p>
+            {% endif %}
+
+            {{ form.non_field_errors }}
+
+            {% for field in form %}
+                <div class="field">
+                    {% if field.field.widget.input_type == "checkbox" %}
+                        <label class="checkbox-label"
+                               for="{{ field.id_for_label }}">
+                            {{ field }}
+                            {{ field.label }}
+                        </label>
+                    {% else %}
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label }}{% if field.field.required %} *{% endif %}
+                        </label>
+                        {{ field }}
+                    {% endif %}
+
+                    {{ field.errors }}
+
+                    {% if field.help_text %}
+                        <div class="help" id="{{ field.auto_id }}_helptext">
+                            {{ field.help_text }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if field.name == "longitude" %}
+                    <p class="help" id="map-help" role="status">
+                        Click the map to place a marker, or drag it to adjust.
+                        {% if is_edit %}
+                            Coordinates are saved when you click Save Changes.
+                        {% else %}
+                            Coordinates are saved when you click Save Project.
+                        {% endif %}
+                    </p>
+                    <div id="location-map"
+                         aria-label="Project location picker"></div>
+                {% endif %}
+            {% endfor %}
+
+            <div class="actions">
+                <button class="button primary" type="submit">
+                    {% if is_edit %}
+                        Save Changes
+                    {% else %}
+                        Save Project
+                    {% endif %}
+                </button>
+                <a class="button" href="{% url 'project-list' %}">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        function initializeLocationPicker() {
+            const latitude = document.getElementById("id_latitude");
+            const longitude = document.getElementById("id_longitude");
+            const help = document.getElementById("map-help");
+            const container = document.getElementById("location-map");
+
+            if (!latitude || !longitude || !help || !container) {
+                return;
+            }
+
+            if (!window.L) {
+                help.textContent =
+                    "Map unavailable. Enter latitude and longitude manually.";
+                container.hidden = true;
+                return;
+            }
+
+            function readCoordinates() {
+                if (!latitude.value.trim() || !longitude.value.trim()) {
+                    return null;
+                }
+
+                const lat = Number(latitude.value);
+                const lng = Number(longitude.value);
+
+                if (
+                    !Number.isFinite(lat) || !Number.isFinite(lng) ||
+                    lat < -90 || lat > 90 ||
+                    lng < -180 || lng > 180
+                ) {
+                    return null;
+                }
+
+                return [lat, lng];
+            }
+
+            const initial = readCoordinates();
+
+            const map = L.map(container).setView(
+                initial || [25.2854, 51.5310],
+                initial ? 16 : 11
+            );
+
+            L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 19,
+                attribution:
+                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+            let marker = null;
+
+            function updateFields(latlng) {
+                latitude.value = latlng.lat.toFixed(6);
+                longitude.value = latlng.lng.toFixed(6);
+            }
+
+            function placeMarker(coordinates) {
+                if (marker) {
+                    marker.setLatLng(coordinates);
+                    return;
+                }
+
+                marker = L.marker(coordinates, {
+                    draggable: true
+                }).addTo(map);
+
+                marker.on("dragend", function () {
+                    const point = marker.getLatLng().wrap();
+                    marker.setLatLng(point);
+                    updateFields(point);
+                });
+            }
+
+            if (initial) {
+                placeMarker(initial);
+            }
+
+            map.on("click", function (event) {
+                const point = event.latlng.wrap();
+                placeMarker(point);
+                updateFields(point);
+            });
+
+            function syncFromFields() {
+                const coordinates = readCoordinates();
+
+                if (!coordinates) {
+                    if (marker) {
+                        map.removeLayer(marker);
+                        marker = null;
+                    }
+                    return;
+                }
+
+                placeMarker(coordinates);
+                map.setView(coordinates, 16);
+            }
+
+            latitude.addEventListener("change", syncFromFields);
+            longitude.addEventListener("change", syncFromFields);
+        }
+
+        initializeLocationPicker();
+    </script>
+</body>
+</html>

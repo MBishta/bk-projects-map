@@ -3,8 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
-from .forms import AddUserForm, EditUserForm
 from django.views.decorators.http import require_http_methods
+
+from .forms import AddUserForm, EditUserForm
 
 
 def is_admin(user):
@@ -20,10 +21,13 @@ class AccountLoginView(LoginView):
 
 @login_required
 def home(request):
-    if is_admin(request.user):
-        return render(request, "accounts/dashboard.html")
-
-    return redirect("public-map")
+    return render(
+        request,
+        "accounts/dashboard.html",
+        {
+            "is_admin": is_admin(request.user),
+        },
+    )
 
 
 @login_required
@@ -58,6 +62,7 @@ def user_list(request):
         "accounts/user_list.html",
         {"rows": rows},
     )
+
 
 @login_required
 def user_add(request):
@@ -119,6 +124,7 @@ def user_edit(request, user_id):
             "account": account,
         },
     )
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
